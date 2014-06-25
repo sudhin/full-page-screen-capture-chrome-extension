@@ -1,10 +1,15 @@
-// Copyright (c) 2012,2013 Peter Coles - http://mrcoles.com/ - All rights reserved.
+// Copyright (c) Sudhin Devarachetty- All rights reserved.
+// via Peter Coles 
 // Use of this source code is governed by the MIT License found in LICENSE
 
 //
 // console object for debugging
 //
-
+ 
+var isGoldImage = false;
+var folder = 'filesystem:chrome-extension://' + chrome.i18n.getMessage('@@extension_id') + '/temporary/';
+var isMultiMode = false;
+var settingID = "" ;
 var log = (function() {
     var parElt = document.getElementById('wrap'),
         logElt = document.createElement('div');
@@ -85,7 +90,7 @@ chrome.extension.onRequest.addListener(function(request, sender, callback) {
 
 function capturePage(data, sender, callback) {
     var canvas;
-
+    scrollbarwidth = scrollbarwidth;
     $('bar').style.width = parseInt(data.complete * 100, 10) + '%';
 
     // Get window.devicePixelRatio from the page, not the popup
@@ -129,13 +134,8 @@ function capturePage(data, sender, callback) {
         });
 }
 
-function openPage() {
-    // standard dataURI can be too big, let's blob instead
-    // http://code.google.com/p/chromium/issues/detail?id=69227#c27
-
-    var dataURI = screenshot.canvas.toDataURL();
-
-    // convert base64 to raw binary data held in a string
+function getBlob(dataURI){
+      // convert base64 to raw binary data held in a string
     // doesn't handle URLEncoded DataURIs
     var byteString = atob(dataURI.split(',')[1]);
 
@@ -152,31 +152,53 @@ function openPage() {
     // create a blob for writing to a file
     var blob = new Blob([ab], {type: mimeString});
 
-    // come up with a filename
-    var name = contentURL.split('?')[0].split('#')[0];
-    if (name) {
-        name = name
-            .replace(/^https?:\/\//, '')
-            .replace(/[^A-z0-9]+/g, '-')
-            .replace(/-+/g, '-')
-            .replace(/^[_\-]+/, '')
-            .replace(/[_\-]+$/, '');
-        name = '-' + name;
-    } else {
-        name = '';
-    }
-    name = 'screencapture' + name + '.png';
+    return blob;
+}
+
+function openPage() {
+    // standard dataURI can be too big, let's blob instead
+    // http://code.google.com/p/chromium/issues/detail?id=69227#c27
+
+    var dataURI = screenshot.canvas.toDataURL();
+    var blob = getBlob(dataURI);
+  
+
+    if(isGoldImage) 
+        {name = settingID+'screencaptureGold.png'}
+    else
+        {name = settingID+'screencaptureOther.png'}
 
     function onwriteend() {
+      
         // open the file that now contains the blob
-        window.open('filesystem:chrome-extension://' + chrome.i18n.getMessage('@@extension_id') + '/temporary/' + name);
+         if(isGoldImage){
+             if(!isMultiMode) window.open(folder +name);
+         }
+         else{
+            var diff = resemble(folder+settingID+'screencaptureGold.png').compareTo(folder + name).ignoreColors().onComplete(function(data){
+                window.webkitRequestFileSystem(TEMPORARY, 1024*1024, function(fs){
+                    fs.root.getFile(settingID+"compareResult.png", {create:true}, function(fileEntry) {
+                        fileEntry.createWriter(function(fileWriter) {
+                            fileWriter.onwriteend = function(){ 
+                               if(!isMultiMode) window.open(folder +settingID+"compareResult.png");
+                            };
+                            fileWriter.write(getBlob(data.getImageDataUrl()));
+                        }, errorHandler);
+                    }, errorHandler);
+                }, errorHandler);    
+
+               
+             });
+         }
+        
+       
     }
 
     function errorHandler() {
         show('uh-oh');
     }
 
-    // create a blob for writing to a file
+    
     window.webkitRequestFileSystem(TEMPORARY, 1024*1024, function(fs){
         fs.root.getFile(name, {create:true}, function(fileEntry) {
             fileEntry.createWriter(function(fileWriter) {
@@ -187,27 +209,88 @@ function openPage() {
     }, errorHandler);
 }
 
-//
-// start doing stuff immediately! - including error cases
-//
+function InitializeComparison(isGold){
 
-chrome.tabs.getSelected(null, function(tab) {
+    isGoldImage = isGold;
 
-    if (testURLMatches(tab.url)) {
-        var loaded = false;
+    chrome.tabs.getSelected(null, function(tab) {
 
-        chrome.tabs.executeScript(tab.id, {file: 'page.js'}, function() {
-            loaded = true;
-            show('loading');
-            sendScrollMessage(tab);
-        });
+        if (testURLMatches(tab.url)) {
+            var loaded = false;
 
-        window.setTimeout(function() {
-            if (!loaded) {
-                show('uh-oh');
-            }
-        }, 1000);
-    } else {
-        show('invalid');
-    }
+            chrome.tabs.executeScript(tab.id, {file: 'page.js'}, function() {
+                loaded = true;
+                show('loading');
+                sendScrollMessage(tab);
+            });
+
+            window.setTimeout(function() {
+                if (!loaded) {
+                    show('uh-oh');
+                }
+            }, 1000);
+        } else {
+            show('invalid');
+        }
+    });
+}
+
+resemble.outputSettings({
+  errorColor: {
+    red: 255,
+    green: 102,
+    blue: 102
+  },
+  errorType: 'flat',
+  transparency: 0.5
 });
+
+jQuery('#Goldbtn').click(function(){
+     isMultiMode = false;
+    InitializeComparison(true);
+});
+
+jQuery('#Comparebtn').click(function(){
+      isMultiMode = false;
+    InitializeComparison(false);
+});
+
+
+jQuery('#ViewGoldbtn').click(function(){
+    window.open(folder+"screencaptureGold.png");
+});
+jQuery('#ViewComparebtn').click(function(){
+    window.open(folder+"screencaptureOther.png");
+});
+
+jQuery('#ViewResultbtn').click(function(){
+    window.open(folder+"compareResult.png");
+});
+jQuery('#ViewAllFilesbtn').click(function(){
+    window.open(folder);
+});
+
+
+
+jQuery('#GoldMultibtn').click(function(){
+    isMultiMode = true;
+    jQuery('.resRow input:checked').each(function(index,item){
+        var settings = jQuery(item).parent().data('settings');
+         resizeWindow(settings);
+         settingID = settings.ID;
+         InitializeComparison(true);
+    });
+   
+});
+jQuery('#CompareMultibtn').click(function(){
+     isMultiMode = true;
+    jQuery('.resRow input:checked').each(function(index,item){
+        var settings = jQuery(item).parent().data('settings');
+         resizeWindow(settings);
+         settingID = settings.ID;
+         InitializeComparison(false);
+    });
+});
+
+
+displayRows();

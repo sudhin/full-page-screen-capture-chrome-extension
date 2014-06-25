@@ -16,7 +16,8 @@ div,p { margin: 0; padding: 0; }
 
 a {
 	color: #3681b3;
-	text-decoration: none;
+	text-decoration: underline;
+  cursor:pointer;
 }
 a:hover { color: #265c80; }
 a:active { color: #000; }
@@ -44,10 +45,50 @@ a:active { color: #000; }
     width: 0%;
     background: #fff url(loader.gif) scroll no-repeat center right;
 }
+
+#resolutionsList  { position:relative; overflow:hidden; margin:0; padding:0 10px 0 0; list-style:none;  }
+  LI.resRow     { position:relative; background:#fff; padding:3px 0; border-top:0px solid #ccc; }
+    LI.resRow:first-child   { border-top:none; }
+    LI.resRow A.handle      { position:relative; display:block; min-height:34px; cursor:pointer; padding:3px 8px 3px 8px; color:#333; border:1px solid #fff; border-radius:4px; text-decoration:none; line-height:16px; }
+    LI.resRow:hover A.handle  { border:1px solid #D3E3F7; text-decoration:none; color:#123272;
+                    background: -webkit-gradient(linear, left top, left bottom, from(#F4F8FE), to(#D3E3F7));  
+                  }
+    .resDetail        { padding-left:15px; font-size:10px; color:#777;}
+
+    .resWidth {width: 60px;display: inline-block;}
+    .icon         { position:absolute; display:inline-block; margin-top:-16px; top:50%; left:0; width:40px; height:32px; vertical-align:middle; border-right:1px solid #ddd;
+                  background-position:center center; background-repeat:no-repeat; 
+                }
+    LI.resRow:hover .icon     { border-color:#4B8CDC; }
+    .i_desktop        { background-image:url(i_desktop.png); }
+    .i_laptop       { background-image:url(i_laptop.png); }
+    .i_mobile       { background-image:url(i_mobile.png); }
+    
+    
+
+
 p { word-wrap: break-word; }
       </style>
   </head>
   <body>
+    <div id="buttons">
+      <button id="Goldbtn">Save a Gold copy</button>
+      <button id="Comparebtn">Compare to Gold copy</button>
+      <br>
+      View Image:&nbsp;&nbsp;&nbsp;&nbsp;
+      <a id="ViewGoldbtn"> Gold </a> &nbsp;&nbsp;&nbsp;&nbsp;
+      <a id="ViewComparebtn">Compare To </a>&nbsp;&nbsp;&nbsp;&nbsp;
+      <a id="ViewResultbtn">Result </a>
+
+      <br>
+    </div>
+<ul id="resolutionsList" class="popup" style="width: 250px;">
+</ul>
+  <div style="display:none;">
+      <span>Select resolutions above to batch compare</span>
+      <button id="GoldMultibtn">Save Gold copies</button>
+      <button id="CompareMultibtn">Compare Gold copies</button>
+  </div>
       <div id="wrap">
           <div id="loading">
               <div class="loader"><div class="bar" id="bar"></div></div>
@@ -74,8 +115,13 @@ p { word-wrap: break-word; }
               version of Chrome.
           </div>
       </div>
+    <a id="ViewAllFilesbtn">View Temp Files </a>
 
       <!-- JavaScript and HTML must be in separate files for security. -->
+      <script src="jquery-2.1.1.min.js"></script>
+      <script src="deviceSize.js"></script>
+      <script src="resemble.js"></script>
+     
       <script src="popup.js"></script>
   </body>
 </html>

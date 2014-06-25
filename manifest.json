@@ -1,8 +1,8 @@
 {
-  "name": "Full Page Screen Capture",
-  "version": "0.0.11",
+  "name": "Capture and Compare Full Screen",
+  "version": "0.0.1",
   "manifest_version": 2,
-  "description": "Screen capture your current page in entirety and reliably!",
+  "description": "Screen capture your current page and compare to gold copies!",
   "browser_action": {
     "default_icon": "icon.png",
     "default_popup": "popup.html"

@@ -1,8 +1,10 @@
 
+
 function onMessage(request, sender, callback) {
     if (request.msg === 'scrollPage') {
         getPositions(callback);
-    } else {
+    }
+    else {
         console.error('Unknown message received from background: ' + request.msg);
     }
 }
@@ -17,6 +19,8 @@ function max(nums) {
 }
 
 function getPositions(callback) {
+
+  
     var body = document.body,
         widths = [
             document.documentElement.clientWidth,
@@ -36,9 +40,10 @@ function getPositions(callback) {
         fullHeight = max(heights),
         windowWidth = window.innerWidth,
         windowHeight = window.innerHeight,
+	    originalOverflowStyle = document.documentElement.style.overflow,
         originalX = window.scrollX,
         originalY = window.scrollY,
-        originalOverflowStyle = document.documentElement.style.overflow,
+
         arrangements = [],
         // pad the vertical scrolling to try to deal with
         // sticky headers, 250 is an arbitrary size
@@ -56,7 +61,7 @@ function getPositions(callback) {
 
     // Disable all scrollbars. We'll restore the scrollbar state when we're done
     // taking the screenshots.
-    document.documentElement.style.overflow = 'hidden';
+    //document.documentElement.style.overflow = 'hidden';
 
     while (yPos > -yDelta) {
         xPos = 0;
@@ -67,14 +72,7 @@ function getPositions(callback) {
         yPos -= yDelta;
     }
 
-    /** * /
-    console.log('fullHeight', fullHeight, 'fullWidth', fullWidth);
-    console.log('windowWidth', windowWidth, 'windowHeight', windowHeight);
-    console.log('xDelta', xDelta, 'yDelta', yDelta);
-    var arText = [];
-    arrangements.forEach(function(x) { arText.push('['+x.join(',')+']'); });
-    console.log('arrangements', arText.join(', '));
-    /**/
+    
 
     numArrangements = arrangements.length;
 
@@ -108,8 +106,7 @@ function getPositions(callback) {
             devicePixelRatio: window.devicePixelRatio
         };
 
-        // Need to wait for things to settle
-        window.setTimeout(function() {
+   window.setTimeout(function() {
             // In case the below callback never returns, cleanup
             var cleanUpTimeout = window.setTimeout(cleanUp, 1250);
 
@@ -124,7 +121,6 @@ function getPositions(callback) {
                     cleanUp();
                 }
             });
-
-        }, 150);
+         }, 150);
     })();
 }
